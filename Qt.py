@@ -916,6 +916,54 @@ These members from the original submodule are misplaced relative PySide2
 
 """
 _misplaced_members = {
+    "PySide6": {
+        "QtGui.QStringListModel": "QtCore.QStringListModel",
+        "QtCore.Property": "QtCore.Property",
+        "QtCore.Signal": "QtCore.Signal",
+        "QtCore.Slot": "QtCore.Slot",
+        "QtCore.QAbstractProxyModel": "QtCore.QAbstractProxyModel",
+        "QtCore.QSortFilterProxyModel": "QtCore.QSortFilterProxyModel",
+        "QtCore.QItemSelection": "QtCore.QItemSelection",
+        "QtCore.QItemSelectionModel": "QtCore.QItemSelectionModel",
+        "QtCore.QItemSelectionRange": "QtCore.QItemSelectionRange",
+        "QtUiTools.QUiLoader": ["QtCompat.loadUi", _loadUi],
+        "shiboken6.wrapInstance": ["QtCompat.wrapInstance", _wrapinstance],
+        "shiboken6.getCppPointer": ["QtCompat.getCppPointer", _getcpppointer],
+        "QtWidgets.qApp": "QtWidgets.QApplication.instance()",
+        "QtCore.QCoreApplication.translate": [
+            "QtCompat.translate", _translate
+        ],
+        "QtWidgets.QApplication.translate": [
+            "QtCompat.translate", _translate
+        ],
+        "QtCore.qInstallMessageHandler": [
+            "QtCompat.qInstallMessageHandler", _qInstallMessageHandler
+        ],
+    },
+    "PyQt6": {
+        "QtCore.pyqtProperty": "QtCore.Property",
+        "QtCore.pyqtSignal": "QtCore.Signal",
+        "QtCore.pyqtSlot": "QtCore.Slot",
+        "QtCore.QAbstractProxyModel": "QtCore.QAbstractProxyModel",
+        "QtCore.QSortFilterProxyModel": "QtCore.QSortFilterProxyModel",
+        "QtCore.QStringListModel": "QtCore.QStringListModel",
+        "QtCore.QItemSelection": "QtCore.QItemSelection",
+        "QtCore.QItemSelectionModel": "QtCore.QItemSelectionModel",
+        "QtCore.QItemSelectionRange": "QtCore.QItemSelectionRange",
+        "uic.loadUi": ["QtCompat.loadUi", _loadUi],
+        "sip.wrapinstance": ["QtCompat.wrapInstance", _wrapinstance],
+        "sip.unwrapinstance": ["QtCompat.getCppPointer", _getcpppointer],
+        "QtWidgets.qApp": "QtWidgets.QApplication.instance()",
+        "QtCore.QCoreApplication.translate": [
+            "QtCompat.translate", _translate
+        ],
+        "QtWidgets.QApplication.translate": [
+            "QtCompat.translate", _translate
+        ],
+        "QtCore.qInstallMessageHandler": [
+            "QtCompat.qInstallMessageHandler", _qInstallMessageHandler
+        ],
+    },
     "PySide2": {
         "QtGui.QStringListModel": "QtCore.QStringListModel",
         "QtCore.Property": "QtCore.Property",
@@ -1046,6 +1094,46 @@ interface for obsolete members, and differences in binding return values.
 }
 """
 _compatibility_members = {
+    "PySide6": {
+        "QWidget": {
+            "grab": "QtWidgets.QWidget.grab",
+        },
+        "QHeaderView": {
+            "sectionsClickable": "QtWidgets.QHeaderView.sectionsClickable",
+            "setSectionsClickable":
+                "QtWidgets.QHeaderView.setSectionsClickable",
+            "sectionResizeMode": "QtWidgets.QHeaderView.sectionResizeMode",
+            "setSectionResizeMode":
+                "QtWidgets.QHeaderView.setSectionResizeMode",
+            "sectionsMovable": "QtWidgets.QHeaderView.sectionsMovable",
+            "setSectionsMovable": "QtWidgets.QHeaderView.setSectionsMovable",
+        },
+        "QFileDialog": {
+            "getOpenFileName": "QtWidgets.QFileDialog.getOpenFileName",
+            "getOpenFileNames": "QtWidgets.QFileDialog.getOpenFileNames",
+            "getSaveFileName": "QtWidgets.QFileDialog.getSaveFileName",
+        },
+    },
+    "PyQt6": {
+        "QWidget": {
+            "grab": "QtWidgets.QWidget.grab",
+        },
+        "QHeaderView": {
+            "sectionsClickable": "QtWidgets.QHeaderView.sectionsClickable",
+            "setSectionsClickable":
+                "QtWidgets.QHeaderView.setSectionsClickable",
+            "sectionResizeMode": "QtWidgets.QHeaderView.sectionResizeMode",
+            "setSectionResizeMode":
+                "QtWidgets.QHeaderView.setSectionResizeMode",
+            "sectionsMovable": "QtWidgets.QHeaderView.sectionsMovable",
+            "setSectionsMovable": "QtWidgets.QHeaderView.setSectionsMovable",
+        },
+        "QFileDialog": {
+            "getOpenFileName": "QtWidgets.QFileDialog.getOpenFileName",
+            "getOpenFileNames": "QtWidgets.QFileDialog.getOpenFileNames",
+            "getSaveFileName": "QtWidgets.QFileDialog.getSaveFileName",
+        },
+    },
     "PySide2": {
         "QWidget": {
             "grab": "QtWidgets.QWidget.grab",
@@ -1316,6 +1404,51 @@ def _build_compatibility_members(binding, decorators=None):
         setattr(Qt.QtCompat, classname, compat_class)
 
 
+def _pyside6():
+    """Initialise PySide6
+
+    These functions serve to test the existence of a binding
+    along with set it up in such a way that it aligns with
+    the final step; adding members from the original binding
+    to Qt.py
+
+    """
+
+    import PySide6 as module
+    extras = ["QtUiTools"]
+    try:
+        try:
+            # Before merge of PySide and shiboken
+            import shiboken6
+        except ImportError:
+            # After merge of PySide and shiboken, May 2017
+            from PySide6 import shiboken6
+        extras.append("shiboken2")
+    except ImportError:
+        pass
+
+    _setup(module, extras)
+    Qt.__binding_version__ = module.__version__
+
+    if hasattr(Qt, "_shiboken6"):
+        Qt.QtCompat.wrapInstance = _wrapinstance
+        Qt.QtCompat.getCppPointer = _getcpppointer
+        Qt.QtCompat.delete = shiboken6.delete
+
+    if hasattr(Qt, "_QtUiTools"):
+        Qt.QtCompat.loadUi = _loadUi
+
+    if hasattr(Qt, "_QtCore"):
+        Qt.__qt_version__ = Qt._QtCore.qVersion()
+
+    if hasattr(Qt, "_QtWidgets"):
+        Qt.QtCompat.setSectionResizeMode = \
+            Qt._QtWidgets.QHeaderView.setSectionResizeMode
+
+    _reassign_misplaced_members("PySide6")
+    _build_compatibility_members("PySide6")
+
+
 def _pyside2():
     """Initialise PySide2
 
@@ -1402,6 +1535,38 @@ def _pyside():
 
     _reassign_misplaced_members("PySide")
     _build_compatibility_members("PySide")
+
+
+def _pyqt6():
+    """Initialise PyQt5"""
+
+    import PyQt6 as module
+    extras = ["uic"]
+    try:
+        import sip
+        extras.append(sip.__name__)
+    except ImportError:
+        sip = None
+
+    _setup(module, extras)
+    if hasattr(Qt, "_sip"):
+        Qt.QtCompat.wrapInstance = _wrapinstance
+        Qt.QtCompat.getCppPointer = _getcpppointer
+        Qt.QtCompat.delete = sip.delete
+
+    if hasattr(Qt, "_uic"):
+        Qt.QtCompat.loadUi = _loadUi
+
+    if hasattr(Qt, "_QtCore"):
+        Qt.__binding_version__ = Qt._QtCore.PYQT_VERSION_STR
+        Qt.__qt_version__ = Qt._QtCore.QT_VERSION_STR
+
+    if hasattr(Qt, "_QtWidgets"):
+        Qt.QtCompat.setSectionResizeMode = \
+            Qt._QtWidgets.QHeaderView.setSectionResizeMode
+
+    _reassign_misplaced_members("PyQt6")
+    _build_compatibility_members('PyQt6')
 
 
 def _pyqt5():
@@ -1640,7 +1805,7 @@ def _cli(args):
 
 def _install():
     # Default order (customise order and content via QT_PREFERRED_BINDING)
-    default_order = ("PySide2", "PyQt5", "PySide", "PyQt4")
+    default_order = ("PySide6", "PyQt6", "PySide2", "PyQt5", "PySide", "PyQt4")
     preferred_order = list(
         b for b in QT_PREFERRED_BINDING.split(os.pathsep) if b
     )
@@ -1648,6 +1813,8 @@ def _install():
     order = preferred_order or default_order
 
     available = {
+        "PySide6": _pyside6,
+        "PyQt6": _pyqt6,
         "PySide2": _pyside2,
         "PyQt5": _pyqt5,
         "PySide": _pyside,
@@ -1716,6 +1883,8 @@ def _install():
 _install()
 
 # Setup Binding Enum states
+Qt.IsPySide6 = Qt.__binding__ == 'PySide6'
+Qt.IsPyQt6 = Qt.__binding__ == 'PyQt6'
 Qt.IsPySide2 = Qt.__binding__ == 'PySide2'
 Qt.IsPyQt5 = Qt.__binding__ == 'PyQt5'
 Qt.IsPySide = Qt.__binding__ == 'PySide'

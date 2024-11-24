@@ -13,7 +13,7 @@ or raises an error
 '''
 
 from MeshCrawler.meshcrawlerErrors import TopologyMismatch
-from Qt.QtWidgets import QApplication
+from MeshCrawler.Qt.QtWidgets import QApplication
 
 ###################################################
 ###				  Match Point Order				###
@@ -29,8 +29,8 @@ def flipMultiDict(eDict, fDict):
 		A dictionary in this form: (eValueSet,fValueSet):key
 	"""
 	inv = {}
-	allKeys = eDict.viewkeys() | fDict.viewkeys()
-	for k in allKeys:
+	allKeys = eDict.keys() | fDict.keys()
+	for k in list(allKeys):
 		eVal = frozenset(eDict.get(k, ()))
 		fVal = frozenset(fDict.get(k, ()))
 		inv.setdefault((eVal, fVal), []).append(k)
@@ -126,14 +126,14 @@ def matchByTopology(orderMesh, shapeMesh, vertexPairs, matchedNum=None, vertNum=
 		A list of (Vertex,Vertex) pairs that define 1:1 matches
 
 	"""
-	orderVerts, shapeVerts = zip(*vertexPairs)
+	orderVerts, shapeVerts = list(zip(*vertexPairs))
 	orderVertsGrow = set(orderVerts)
 	shapeVertsGrow = set(shapeVerts)
 	orderVerts = set(orderVerts)
 	shapeVerts = set(shapeVerts)
 	centerVerts = set()
 
-	orderToShape = {s:t for s, t in vertexPairs}
+	orderToShape = {s:t for s, t in list(vertexPairs)}
 
 	if vertNum is not None:
 		vertNum = float(vertNum) #just for percentage reporting
@@ -150,7 +150,7 @@ def matchByTopology(orderMesh, shapeMesh, vertexPairs, matchedNum=None, vertNum=
 		if vertNum is not None:
 			percent = (len(orderVerts) + matchedNum) / vertNum * 100
 			if pBar is None:
-				print "\rPercentage processed: {0:.2f}%".format(percent),
+				print("\rPercentage processed: {0:.2f}%".format(percent),)
 			else:
 				pBar.setValue(int(percent))
 				QApplication.processEvents()
@@ -186,7 +186,7 @@ def matchByTopology(orderMesh, shapeMesh, vertexPairs, matchedNum=None, vertNum=
 
 		# Then, if the swapped dict's value only has 1 item
 		# it is a uniquely identified vertex and can be matched
-		for orderKey, orderValue in orderEFDict.iteritems():
+		for orderKey, orderValue in list(orderEFDict.items()):
 			if len(orderValue) == 1:
 				edgeKey = frozenset(orderToShape[i] for i in orderKey[0])
 				faceKey = frozenset(orderToShape[i] for i in orderKey[1])
@@ -197,15 +197,15 @@ def matchByTopology(orderMesh, shapeMesh, vertexPairs, matchedNum=None, vertNum=
 					area = list(edgeKey) + list(faceKey)
 					area = list(set(area))
 					vp = vertexPairs[:]
-					iidx, jidx = zip(*vp)
+					iidx, jidx = list(zip(*vp))
 					m = 'Order {0} to Shape {1}: Match produced no results: Check this order area {2}'.format(iidx, jidx, area)
 					#if vertNum is not None and pBar is None:
-						#print #clear the percentage value
+						#print("clear the percentage value")
 					raise TopologyMismatch(m)
 
 				if len(shapeValue) != 1:
 					#if vertNum is not None and pBar is None:
-						#print #clear the percentage value
+						#print("clear the percentage value")
 					raise TopologyMismatch('Match produced multiple results')
 
 				orderVert = orderValue[0]
@@ -223,10 +223,10 @@ def matchByTopology(orderMesh, shapeMesh, vertexPairs, matchedNum=None, vertNum=
 				updated = True
 
 	if vertNum is not None and pBar is None:
-		print #clear the percentage value
+		print("#clear the percentage value")
 
 	#if vertNum is not None:
-		#print "\n"
-	return [(k, v) for k, v in orderToShape.iteritems()]
+		#print("\n")
+	return [(k, v) for k, v in list(orderToShape.items())]
 
 

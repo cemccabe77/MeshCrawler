@@ -49,7 +49,7 @@ def getObjectName(thing):
 def getFaces(thing):
 	topo = []
 	with polyManager(thing) as obj:
-		for i in xrange(mxs.getNumFaces(obj)):
+		for i in range(mxs.getNumFaces(obj)):
 			fv = mxs.polyop.getFaceVerts(obj, i+1)
 			topo.append([x-1 for x in fv])
 	return topo
@@ -57,7 +57,7 @@ def getFaces(thing):
 def getVerts(thing):
 	isMesh = thingIsMesh(thing)
 	op = mxs if isMesh else mxs.polyop
-	maxVerts = [op.getVert(thing, i + 1) for i in xrange(op.getNumVerts(thing))]
+	maxVerts = [op.getVert(thing, i + 1) for i in range(op.getNumVerts(thing))]
 	ret = np.array([(p.x, p.y, p.z) for p in maxVerts])
 
 	offset = np.array([(thing.pos.x, thing.pos.y, thing.pos.z)])
@@ -70,11 +70,11 @@ def getUVs(obj):
 			return None, None
 		faceCount = mxs.polyop.getNumMapFaces(thing, 1)
 
-		uvPoints = [mxs.polyop.getMapVert(thing, 1, i+1) for i in xrange(uvCount)]
+		uvPoints = [mxs.polyop.getMapVert(thing, 1, i+1) for i in range(uvCount)]
 		uvs = np.array([(i.x, i.y) for i in uvPoints])
 
 		uvFaces = []
-		for i in xrange(faceCount):
+		for i in range(faceCount):
 			uvf = mxs.polyop.getMapFace(thing, 1, i+1)
 			uvFaces.append([i-1 for i in uvf])
 
@@ -85,7 +85,7 @@ def createRawObject(name, faces, verts, uvFaces, uvs):
 	oldUndo = mxs.execute("set undo off")
 	try:
 		mm.name = name
-		for i in xrange(len(verts)):
+		for i in range(len(verts)):
 			mxs.meshop.setvert(mm, i+1, mxs.Point3(float(verts[i][0]), float(verts[i][1]), float(verts[i][2])))
 
 		mxs.convertTo(mm, mxs.PolyMeshObject)
@@ -98,7 +98,7 @@ def createRawObject(name, faces, verts, uvFaces, uvs):
 			mxs.polyop.setNumMapVerts(mm, 1, len(uvs), keep=False)
 			mxs.polyop.setNumMapFaces(mm, 1, len(uvFaces), keep=False)
 
-			for i in xrange(len(uvs)):
+			for i in range(len(uvs)):
 				mxs.polyop.setMapVert(mm, 1, i+1, mxs.Point3(float(uvs[i][0]), float(uvs[i][1]), 0.0))
 
 			mxs.convertTo(mm, mxs.PolyMeshObject)

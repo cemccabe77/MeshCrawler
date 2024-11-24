@@ -5,7 +5,11 @@ Move the vertices so a new subdivision will match the
 original as closely as possible
 """
 import numpy as np
-from itertools import chain, izip_longest
+from itertools import chain
+try:
+	from itertools import zip_longest
+except ImportError:
+	from itertools import izip_longest as zip_longest
 from MeshCrawler.Qt.QtWidgets import QApplication
 
 def mergeCycles(groups):
@@ -83,7 +87,7 @@ def buildHint(island, neigh, borders):
 			d.setdefault(len(neigh[v]), []).append(v)
 
 		dd = {}
-		for k, v in d.iteritems():
+		for k, v in d.items():
 			dd.setdefault(len(v), []).append(k)
 
 		mkey = min(dd.keys())
@@ -258,9 +262,9 @@ def buildNeighborDict(faces):
 
 	borders = set()
 	out = {}
-	for k, v in fanDict.iteritems():
+	for k, v in fanDict.items():
 		fans, cycles = mergeCycles(v)
-		for f, c in zip(fans, cycles):
+		for f, c in list(zip(fans, cycles)):
 			if not c:
 				borders.update((f[0], f[-1], k))
 		out[k] = fans
@@ -297,7 +301,7 @@ def buildLayeredNeighborDicts(faces, uFaces, dWings):
 
 	assert borders >= uBorders, "Somehow the unsubdivided borders contain different vIdxs"
 
-	for i, (k, uNeigh) in enumerate(uNeighDict.iteritems()):
+	for i, (k, uNeigh) in enumerate(uNeighDict.items()):
 		neighDict[k] = _align(neighDict[k], uNeigh, dWings)
 
 	return neighDict, uNeighDict, edgeDict, uEdgeDict, borders
@@ -477,7 +481,7 @@ def deleteCenters(meshFaces, uvFaces, centerDel, pBar=None):
 	faceDelDict = {}
 	uvDelDict = {}
 	uvFaces = uvFaces or []
-	for face, uvFace in izip_longest(meshFaces, uvFaces):
+	for face, uvFace in zip_longest(meshFaces, uvFaces):
 		fi = cds.intersection(face)
 		# If we are a subdivided mesh, Then each face will have exactly one
 		# vertex that is part of the deletion set
@@ -505,7 +509,7 @@ def deleteCenters(meshFaces, uvFaces, centerDel, pBar=None):
 		pBar.setMaximum(len(faceDelDict))
 
 	chk = -1
-	for idx, rFaces in faceDelDict.iteritems():
+	for idx, rFaces in faceDelDict.items():
 		chk += 1
 		if pBar is not None:
 			pBar.setValue(chk)
@@ -514,7 +518,7 @@ def deleteCenters(meshFaces, uvFaces, centerDel, pBar=None):
 		ruvFaces = uvDelDict.get(idx, [])
 		# The faces are guaranteed to be in a single loop cycle
 		# so I don't have to handle any annoying edge cases! Yay!
-		faceEnds = {f[1]: (f[2], f[3], uvf) for f, uvf in izip_longest(rFaces, ruvFaces)} #face ends
+		faceEnds = {f[1]: (f[2], f[3], uvf) for f, uvf in zip_longest(rFaces, ruvFaces)} #face ends
 
 		end = rFaces[-1][-1] # get an arbitrary face to start with
 		newFace = []
@@ -523,8 +527,8 @@ def deleteCenters(meshFaces, uvFaces, centerDel, pBar=None):
 			try:
 				diag, nxt, uvf = faceEnds.pop(end)
 			except KeyError:
-				print "rFaces", rFaces
-				print "fe", faceEnds
+				print("rFaces", rFaces)
+				print("fe", faceEnds)
 				raise
 			if uvf is not None:
 				try:
@@ -532,7 +536,7 @@ def deleteCenters(meshFaces, uvFaces, centerDel, pBar=None):
 					uvWings.setdefault(uvf[1], []).append(uvf[2])
 					uvWings.setdefault(uvf[3], []).append(uvf[2])
 				except IndexError:
-					print "UVF", uvf, chk
+					print("UVF", uvf, chk)
 					raise
 
 			newFace.append(diag)
@@ -618,7 +622,7 @@ def getUVPins(faces, borders, uvFaces, uvBorders, pinBorders):
 		return set(uvBorders)
 
 	pinnit = set()
-	for face, uvFace in zip(faces, uvFaces):
+	for face, uvFace in list(zip(faces, uvFaces)):
 		for i in range(len(face)):
 			f = face[i]
 			pf = face[i-1]

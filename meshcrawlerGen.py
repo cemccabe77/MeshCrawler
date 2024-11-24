@@ -9,7 +9,7 @@ import itertools
 from MeshCrawler.meshcrawlerLib import matchByTopology
 from MeshCrawler.meshcrawlerErrors import TopologyMismatch, IslandMismatch
 
-from Qt.QtWidgets import QApplication
+from MeshCrawler.Qt.QtWidgets import QApplication
 
 ###################################################
 ###				  Approximation 				###
@@ -36,12 +36,12 @@ def unscrambleByDistance(cleanVerts, dirtyVerts):
 	dist = cdist(cleanVerts, dirtyVerts)
 	idxs = linear_sum_assignment(dist)
 	# The clean index will be sorted
-	return sorted(zip(*idxs))
+	return sorted(list(zip(*idxs)))
 
 def unscrambleByDistance_Pure(cleanVerts, dirtyVerts, invert=False):
 	# use the pure python implementation
 	# because scipy isn't easy to get for Maya :(
-	from munkres import Munkres
+	from MeshCrawler.munkres import Munkres
 	m = Munkres()
 	costs = buildCosts(cleanVerts, dirtyVerts, invert=invert)
 	indexes = m.compute(costs)
@@ -55,7 +55,7 @@ def buildCosts(orderCenters, shapeCenters, invert=False):
 	for oC in orderCenters:
 		row = []
 		for sC in shapeCenters:
-			row.append(mul * sum((i-j)**2 for i, j in zip(oC, sC)))
+			row.append(mul * sum((i-j)**2 for i, j in list(zip(oC, sC))))
 		squaredDistances.append(row)
 	return squaredDistances
 
@@ -66,9 +66,9 @@ def buildCosts(orderCenters, shapeCenters, invert=False):
 
 def _getMinListSizeKey(d):
 	lenDict = {}
-	for k, v in d.iteritems():
+	for k, v in d.items():
 		lenDict.setdefault(len(v), set()).add(k)
-	minLen = min(lenDict.iterkeys())
+	minLen = min(lenDict.keys())
 	return lenDict[minLen]
 
 def _getValenceDict(mesh, verts):
@@ -94,7 +94,7 @@ def _getMinValencePoints(order, shape, orderVerts, shapeVerts):
 		for key in svk - ovk:
 			sCheck.extend(shapeValence[key])
 
-		print "Raising Topo Mismatch", oCheck, sCheck
+		print("Raising Topo Mismatch", oCheck, sCheck)
 		raise TopologyMismatch("Valence Points Mismatch. Check Order Here {0}, and Shape Here {1}".format(oCheck, sCheck))
 	else:
 		for key in orderValence:
@@ -231,7 +231,7 @@ def findPossiblePairsByValenceSteps(order, shape, orderVerts, shapeVerts):
 	return orderMatches, shapeMatches
 
 def partitionIslands(mesh):
-	allverts = set(xrange(len(mesh.vertArray)))
+	allverts = set(range(len(mesh.vertArray)))
 	islands = []
 	while allverts:
 		seed = set([allverts.pop()])
@@ -244,10 +244,10 @@ def partitionIslands(mesh):
 
 def bbCenter(mesh, island):
 	verts = [mesh.vertArray[i] for i in island]
-	xAxis, yAxis, zAxis = zip(*verts)
+	xAxis, yAxis, zAxis = list(zip(*verts))
 	lC = (min(xAxis), min(yAxis), min(zAxis)) # lowerCorner
 	uC = (max(xAxis), max(yAxis), max(zAxis)) # upperCorner
-	center = [(i+j)/2.0 for i, j in zip(lC, uC)]
+	center = [(i+j)/2.0 for i, j in list(zip(lC, uC))]
 	return center
 
 def makeIslandMarriages(orderMesh, shapeMesh, orderIslands, shapeIslands):
@@ -283,7 +283,7 @@ def axisMatchGenerator(order, shape, orderIsland, shapeIsland, deep=False):
 		orderPoints = [order.vertArray[i] for i in orderMatches]
 		shapePoints = [shape.vertArray[i] for i in shapeMatches]
 		pairs = unscrambleByDistance_Pure(orderPoints, shapePoints)
-		orderIdxs, shapeIdxs = zip(*pairs)
+		orderIdxs, shapeIdxs = list(zip(*pairs))
 		orderMatches = [orderMatches[i] for i in orderIdxs]
 		shapeMatches = [shapeMatches[i] for i in shapeIdxs]
 
@@ -307,7 +307,7 @@ def starMatchGenerator(order, shape, orderPoint, shapePoint, reverse=False):
 		else:
 			shapeVerts = rotStar[:2][::-1] + [shapePoint]
 
-		yield zip(orderVerts, shapeVerts)
+		yield list(zip(orderVerts, shapeVerts))
 
 def fullMatchGenerator(order, shape, orderIsland, shapeIsland):
 	''' Set up 3-vert neighbors around an axis for an actual match attempt '''
@@ -358,10 +358,11 @@ def autoCrawlMeshes(orderMesh, shapeMesh, skipMismatchedIslands=False, pBar=None
 				QApplication.processEvents()
 			check += 1
 			try:
-				print
-				print "Checking Vertex Match", zip(*sm)
-				match = matchByTopology(orderMesh, shapeMesh, sm,
-					matchedNum=matchCount, vertNum=len(orderMesh.vertArray), pBar=pBar)
+				print('')
+				print("Checking Vertex Match", list(zip(*sm)))
+				vertNum=len(list(orderMesh.vertArray))
+				match = matchByTopology(orderMesh, shapeMesh, list(sm),
+					matchedNum=matchCount, vertNum=len(list(orderMesh.vertArray)), pBar=pBar)
 			except TopologyMismatch as err:
 				idxErrors.append(str(err))
 			else:
@@ -403,11 +404,11 @@ def islandMatchCoProcess(orderMesh, shapeMesh, deep=False, skipMismatchedIslands
 		faceCount = getIslandFaceCount(shapeMesh, si)
 		siDict.setdefault((pointCount, faceCount), []).append(si)
 
-	if (len(siDict) == 1 and len(oiDict) == 1 and
-			len(siDict.values()[0]) == 1 and len(oiDict.values()[0]) == 1):
+	if (len(list(siDict)) == 1 and len(list(oiDict)) == 1 and
+			len(list(siDict.values())[0]) == 1 and len(list(oiDict.values())[0]) == 1):
 		# shortcut the single-island case
-		oi = oiDict.values()[0][0]
-		si = siDict.values()[0][0]
+		oi = list(oiDict.values())[0][0]
+		si = list(siDict.values())[0][0]
 		if deep:
 			yield [[oi]], [[si]]
 		else:
@@ -481,13 +482,13 @@ def matchGenerator(orderMesh, shapeMesh, skipMismatchedIslands=False):
 	img = islandMatchCoProcess(orderMesh, shapeMesh, skipMismatchedIslands=skipMismatchedIslands, deep=True)
 	for oiGroups, siGroups in img:
 		amgs = []
-		for oiGroup, siGroup in zip(oiGroups, siGroups):
-			for oi, si in zip(oiGroup, siGroup):
+		for oiGroup, siGroup in list(zip(oiGroups, siGroups)):
+			for oi, si in list(zip(oiGroup, siGroup)):
 				amgs.append(list(axisMatchGenerator(orderMesh, shapeMesh, oi, si)))
 
 		ranges = [range(len(i)) for i in amgs]
 		for idxs in itertools.product(*ranges):
-			yield [amg[i] for amg, i in zip(amgs, idxs)]
+			yield [amg[i] for amg, i in list(zip(amgs, idxs))]
 
 def symmetryGenerator(mesh, island):
 	orderMatches, shapeMatches = findPossiblePairsByValenceSteps(mesh, mesh, island, island)
@@ -498,7 +499,7 @@ def symmetryGenerator(mesh, island):
 		orderPoints = [mesh.vertArray[i] for i in orderMatches]
 		shapePoints = [mesh.vertArray[i] for i in shapeMatches]
 		pairs = unscrambleByDistance_Pure(orderPoints, shapePoints, invert=True)
-		orderIdxs, shapeIdxs = zip(*pairs)
+		orderIdxs, shapeIdxs = list(zip(*pairs))
 		orderMatches = [orderMatches[i] for i in orderIdxs]
 		shapeMatches = [shapeMatches[i] for i in shapeIdxs]
 
@@ -518,14 +519,14 @@ def test():
 	shapePath = r'H:\public\tyler\bagel\Head_EN_Bad1.obj'
 	#outPath = r'H:\public\tyler\bagel\crawl.obj'
 
-	print "Loading Order Mesh"
+	print("Loading Order Mesh")
 	orderMesh = Mesh.loadObj(orderPath)
-	print "Loading Shape Mesh"
+	print("Loading Shape Mesh")
 	shapeMesh = Mesh.loadObj(shapePath)
 
 	matches = autoCrawlMeshes(orderMesh, shapeMesh, skipMismatchedIslands=True)
-	
-	print "DONE", len(matches)
+
+	print("DONE", len(matches))
 
 
 
@@ -539,11 +540,11 @@ def test():
 
 
 	#orderPossible, shapePossible = findPossiblePairsByValenceSteps(headOrder.vertices, headShape.vertices)
-	#print "POSSIBLE PAIRS:", orderPossible, shapePossible
+	#print("POSSIBLE PAIRS:", orderPossible, shapePossible)
 
 	#minValence, orderPossible, shapePossible = _getMinValencePoints(headOrder, headShape)
 	#match = matchPossiblePairs(headOrder, headShape, orderPossible, shapePossible)
-	#print "Match Found!!!"
+	#print("Match Found!!!")
 	#match = matchByTopology(headOrder, headShape, vertPairs, len(headOrder.vertices))
 
 	#updateVertPairs(headOrder, match)

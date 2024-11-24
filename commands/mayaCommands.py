@@ -31,7 +31,7 @@ def getFaces(thing):
 	vIdx = om.MIntArray()
 	for i in range(fnMesh.numPolygons()):
 		fnMesh.getPolygonVertices(i, vIdx)
-		face = [vIdx[j] for j in xrange(vIdx.length())]
+		face = [vIdx[j] for j in range(vIdx.length())]
 		faces.append(face)
 	return faces
 
@@ -82,7 +82,7 @@ def getUVs(thing):
 	for i in range(meshFn.numPolygons()):
 		meshFn.getPolygonVertices(i, vIdx)
 		uvFace = []
-		for j in xrange(vIdx.length()):
+		for j in range(vIdx.length()):
 			meshFn.getPolygonUVid(i, j, uvIdxPtr)
 			uvIdx = util.getInt(uvIdxPtr)
 			if uvIdx >= uArray.length() or uvIdx < 0:
@@ -90,7 +90,7 @@ def getUVs(thing):
 			uvFace.append(uvIdx)
 		uvFaces.append(uvFace)
 
-	uvs = np.array([(uArray[i], vArray[i]) for i in xrange(uArray.length())])
+	uvs = np.array([(uArray[i], vArray[i]) for i in range(uArray.length())])
 	return uvs, uvFaces
 
 def createRawObject(name, faces, verts, uvFaces, uvs):
@@ -186,7 +186,7 @@ def setAllVerts(obj, newVerts):
 
 def selectAdjacentEdges(obj, centers):
 	sel = []
-	for k, g in groupby(enumerate(centers), lambda v: v[0] - v[1]):
+	for (k, g) in groupby(enumerate(centers), lambda i,x:i-x):
 		adj = list(map(itemgetter(1), g))
 		first, last = adj[0], adj[-1]
 		if first == last:

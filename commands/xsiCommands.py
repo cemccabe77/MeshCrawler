@@ -45,7 +45,7 @@ def _getUVs(thing):
 	if not texProps:
 		return None
 	texProp = texProps[0]
-	return  zip(*texProp.Elements.Array)
+	return list(zip(*texProp.Elements.Array))
 
 def getUVs(thing):
 	bigUvs = _getUVs(thing)
@@ -63,7 +63,7 @@ def getUVs(thing):
 
 	# Build the collapsed uv list
 	uvs = [None] * len(uvd)
-	for uv, idx in uvd.iteritems():
+	for uv, idx in uvd.items():
 		uvs[idx] = uv
 	uvs = np.array(uvs)
 
@@ -107,7 +107,7 @@ def createRawObject(name, faces, verts, uvFaces, uvs):
 	if uvs is not None:
 		uvws = [(i[0], i[1], 0.0) for i in uvs]
 		uvws = [uvws[i] for i in chain.from_iterable(map(reversed, uvFaces))]
-		uvws = zip(*uvws)
+		uvws = list(zip(*uvws))
 
 	return _createRawObject(name, faceArray, vertArray, uvws)
 
@@ -137,7 +137,7 @@ def cloneObject(obj, name):
 	vertArray, faceArray = obj.ActivePrimitive.Geometry.Get2()
 	uvws = _getUVs(obj)
 	if uvws is not None:
-		uvws = zip(*uvws)
+		uvws = list(zip(*uvws))
 	return _createRawObject(name, faceArray, vertArray, uvws=uvws)
 
 def freezeObject(obj):

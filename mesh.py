@@ -101,12 +101,12 @@ class Mesh(object):
 
 		vertCount = len(self.vertArray)
 		if ensureWinding:
-			self.vertNeighbors = [self._linkPairs(self.vertWindingPairs[i]) for i in xrange(vertCount)]
+			self.vertNeighbors = [self._linkPairs(self.vertWindingPairs[i]) for i in range(vertCount)]
 		else:
-			self.vertNeighbors = [neighborDict[i] for i in xrange(vertCount)]
+			self.vertNeighbors = [neighborDict[i] for i in range(vertCount)]
 
 		self.faceEdgeAdjacency = {}
-		for i in xrange(vertCount):
+		for i in range(vertCount):
 			for j in self.vertNeighbors[i]:
 				pair = (i, j)
 				ccw = hedgeCCWDict.get(pair, None)
@@ -115,22 +115,22 @@ class Mesh(object):
 
 		if ensureWinding:
 			self.vertToFaces = []
-			for i in xrange(vertCount):
+			for i in range(vertCount):
 				wings = [self.faceEdgeAdjacency[(i, j)] for j in self.vertNeighbors[i]]
 				wings = [i for i in wings if None not in i]
 				self.vertToFaces.append(self._linkPairs(wings))
 		else:
-			self.vertToFaces = [vertToFaces[i] for i in xrange(vertCount)]
+			self.vertToFaces = [vertToFaces[i] for i in range(vertCount)]
 
 	def ensureWinding(self):
 		""" Ensure the winding of the mesh after-the-fact """
 		if self._wound:
 			return
 		self._wound = True
-		self.vertNeighbors = [self._linkPairs(self.vertWindingPairs[i]) for i in xrange(self.vertCount())]
+		self.vertNeighbors = [self._linkPairs(self.vertWindingPairs[i]) for i in range(self.vertCount())]
 
 		self.vertToFaces = []
-		for i in xrange(self.vertCount()):
+		for i in range(self.vertCount()):
 			wings = [self.faceEdgeAdjacency[(i, j)] for j in self.vertNeighbors[i]]
 			wings = [i for i in wings if None not in i]
 			self.vertToFaces.append(self._linkPairs(wings))
@@ -179,7 +179,7 @@ class Mesh(object):
 				# Then cut them back to 3
 				# Still doing this even though I'm ignoring normals
 				face = [i[:3] for i in face]
-				f, u, n = zip(*face)
+				f, u, n = list(zip(*face))
 				faces.append(f)
 				if any(u):
 					uvIdxs.extend(u)
@@ -228,7 +228,7 @@ class Mesh(object):
 		uvFaces = None
 		if iuvs.valid():
 			uvValue = iuvs.getValueProperty().getValue()
-			uvs = zip(uvValue.x, uvValue.y)
+			uvs = list(zip(uvValue.x, uvValue.y))
 			if iuvs.isIndexed():
 				idxs = list(iuvs.getIndexProperty().getValue())
 				uvFaces = []
@@ -269,7 +269,7 @@ class Mesh(object):
 			if fwPairs and linked[0][0] != linked[-1][0]:
 				# if there's still some left and we didn't find a cycle
 				# then search backwards
-				bkPairs = {j: i for i, j in fwPairs.iteritems()}
+				bkPairs = {j: i for i, j in fwPairs.items()}
 				inv = []
 				nxt = linked[0][0]
 				while nxt is not None:
@@ -280,7 +280,7 @@ class Mesh(object):
 				#reverse and remove the extra (idx, None) pair
 				linked = inv[-2::-1] + linked
 				# Rebuild what's left into a new dict for the next group
-				fwPairs = {j: i for i, j in bkPairs.iteritems()}
+				fwPairs = {j: i for i, j in bkPairs.items()}
 
 			# Parse the final output
 			fin = [i for i, _ in linked]
@@ -305,7 +305,7 @@ class Mesh(object):
 		"""
 		verts = self.faceVertArray[faceIdx]
 		out = []
-		for i in xrange(verts):
+		for i in range(verts):
 			edge = (verts[i-1], verts[i])
 			_, rev = self.faceEdgeAdjacency.get(edge, (None, None))
 			out.append(rev)
@@ -379,7 +379,7 @@ class Mesh(object):
 			list: List of vertex objects
 		"""
 		if self._verts is None:
-			self._verts = [Vert(self, i) for i in xrange(len(self.vertArray))]
+			self._verts = [Vert(self, i) for i in range(len(self.vertArray))]
 		return self._verts
 
 	def faces(self):
@@ -389,7 +389,7 @@ class Mesh(object):
 			list: List of face objects
 		"""
 		if self._faces is None:
-			self._faces = [Face(self, i) for i in xrange(len(self.faceVertArray))]
+			self._faces = [Face(self, i) for i in range(len(self.faceVertArray))]
 		return self._faces
 
 	def vertSet(self):
@@ -456,7 +456,7 @@ class Mesh(object):
 			VertSet: VertSet of border vertices
 		"""
 		out = VertSet(self)
-		for edge, adj in self.faceEdgeAdjacency.iteritems():
+		for edge, adj in self.faceEdgeAdjacency.items():
 			if None in adj:
 				out.update(edge)
 		return out

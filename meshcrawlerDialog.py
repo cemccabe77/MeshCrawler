@@ -284,7 +284,7 @@ class MatchTopologyWidget(QWidget):
 	def _crawlAdvanced(self, pairs, orderMesh, shapeMesh, pBar):
 		ois = [frozenset(i) for i in partitionIslands(orderMesh)]
 		sis = [frozenset(i) for i in partitionIslands(shapeMesh)]
-		oVals, sVals = zip(*pairs)
+		oVals, sVals = list(zip(*pairs))
 		oCheck, sCheck = {}, {}
 		oOnes, sOnes = [], []
 		orderObj = self.uiOrderLINE.text()
@@ -315,7 +315,7 @@ class MatchTopologyWidget(QWidget):
 			buildPairs = []
 			for overts in oCheck.itervalues():
 				for sverts in sCheck.itervalues():
-					zPairs = zip(overts, sverts)
+					zPairs = list(zip(overts, sverts))
 					if all([p in pairs for p in zPairs]):
 						buildPairs.append(zPairs)
 
